@@ -1,0 +1,71 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    background-color: #89CFF0; /* Fundo azul semelhante ao da imagem */
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+}
+
+.kanban-board {
+    display: flex;
+    gap: 20px;
+}
+
+.kanban-column {
+    background-color: #f7f7f7;
+    border-radius: 8px;
+    width: 200px;
+    padding: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.column-header {
+    font-weight: bold;
+    text-align: center;
+    color: #fff;
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+.backlog {
+    background-color: #6ba3ff;
+}
+
+.design {
+    background-color: #b593ff;
+}
+
+.todo {
+    background-color: #ff7474;
+}
+
+.doing {
+    background-color: #ff7474;
+}
+
+.card {
+    background-color: #fff;
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.add-card {
+    background: none;
+    border: none;
+    color: #666;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.add-card:hover {
+    color: #000;
+}
