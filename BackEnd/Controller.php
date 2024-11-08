@@ -17,6 +17,8 @@ switch ($method) {
             getAllTasks();
         } elseif ($endpoint == 'user' && isset($_GET['id'])) {
             getTask($_GET['id']);
+        } elseif ($endpoint == 'list'){
+            getAllLists();
         }
         break;
     case 'POST':
@@ -85,3 +87,10 @@ function deleteTask($id) {
     echo json_encode(["message" => "Tarefa excluída com sucesso"]);
 }
 
+function getAllLists() {
+    global $pdo;
+    $stmt = $pdo->prepare("SELECT * FROM lista");
+    $stmt->execute();
+    $lists = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    echo json_encode($lists);
+}
