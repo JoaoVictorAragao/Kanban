@@ -24,6 +24,8 @@ switch ($method) {
     case 'POST':
         if ($endpoint == 'task') {
             createTask($input);
+        }elseif ($endpoint == 'list'){
+            createList($input);
         }
         break;
     case 'PUT':
@@ -93,4 +95,12 @@ function getAllLists() {
     $stmt->execute();
     $lists = $stmt->fetchAll(PDO::FETCH_ASSOC);
     echo json_encode($lists);
+}
+
+function createList($data) {
+    global $pdo;
+    $stmt = $pdo->prepare("INSERT INTO lista (nome) VALUES (:nome)");
+    $stmt->bindParam(':nome', $data['nome']);
+    $stmt->execute();
+    echo json_encode(["message" => "Lista criada com sucesso"]);
 }
