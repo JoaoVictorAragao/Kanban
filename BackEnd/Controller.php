@@ -13,7 +13,7 @@ $endpoint = $_GET['endpoint'] ?? '';
 
 switch ($method) {
     case 'GET':
-        if ($endpoint == 'tasks') {
+        if ($endpoint == 'task') {
             getAllTasks();
         } elseif ($endpoint == 'user' && isset($_GET['id'])) {
             getTask($_GET['id']);

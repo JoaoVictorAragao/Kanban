@@ -5,7 +5,6 @@ async function recuperarListas() {
         const response = await fetch("http://localhost/Kanban/BackEnd/Controller.php?endpoint=list");
         const lists = await response.json();
         return lists;
-        //console.log(lists);
     } catch (error) {
         console.error(error);
     }
@@ -13,11 +12,9 @@ async function recuperarListas() {
 
 async function recuperarTarefas() {
     try {
-        const response = await fetch("http://localhost/Kanban/BackEnd/Controller.php?endpoint=tasks");
+        const response = await fetch("http://localhost/Kanban/BackEnd/Controller.php?endpoint=task");
         const tasks = await response.json();
         return tasks;
-        //console.log(tasks);
-        //console.log(tasks[0].lista);
     } catch (error) {
         console.error(error);
     }
@@ -37,6 +34,7 @@ async function renderTarefas() {
             if (task.lista === list.id) {
                 const card = document.createElement("div");
                 card.classList.add("card");
+                card.setAttribute("id", task.id);
                 card.textContent = task.nome;
                 column.appendChild(card);
                 console.log(`List: ${list.nome}, Task: ${task.nome}`);
@@ -57,34 +55,67 @@ document.addEventListener("DOMContentLoaded", recuperarTarefas);
 document.addEventListener("DOMContentLoaded", recuperarListas);
 document.addEventListener("DOMContentLoaded", renderTarefas);
 
+/*JQUERY*/
 
-const addCardButton = document.querySelectorAll("button.add-card");
-//console.log(addCardButton); 
-for (let i = 0; i < addCardButton.length; i++) {
-    addCardButton[i].addEventListener("click", function () {
-        console.log("Adicionar cartão");
-        const cardInput = document.createElement("input");
-        cardInput.type = "text";
-        cardInput.placeholder = "Digite o texto do cartão";
-        cardInput.classList.add("card-input");
-        this.parentElement.appendChild(cardInput);
-        
-        const addButton = document.createElement("button");
-        addButton.textContent = "Adicionar";
-        addButton.classList.add("add-card-button");
-        this.parentElement.appendChild(addButton);
+$('.kanban-board').on('click', '.add-card', function (e) {
+    const cardInput = document.createElement("input");
+    cardInput.type = "text";
+    cardInput.placeholder = "Digite o texto do cartão";
+    cardInput.classList.add("card-input");
+    cardInput.setAttribute("id", this.id);
+    this.parentElement.appendChild(cardInput);
 
-        addButton.addEventListener("click", function() {
-            if (cardInput.value.trim() !== "") {
-                const newCard = document.createElement("div");
-                newCard.classList.add("card");
-                newCard.textContent = cardInput.value;
-                cardInput.parentElement.insertBefore(newCard, cardInput);
-                cardInput.value = "";
-            }
-        });
+    const listId = this.id;
+
+    const addButton = document.createElement("button");
+    addButton.textContent = "Adicionar";
+    addButton.classList.add("add-card-button");
+    this.parentElement.appendChild(addButton);
+    this.remove();
+
+    addButton.addEventListener("click", function () {
+        const cardText = cardInput.value;
+        const card = document.createElement("div");
+        const addCardButton = document.createElement("button");
+        addCardButton.classList.add("add-card");
+        addCardButton.textContent = "+ Adicionar um cartão";
+        card.classList.add("card");
+        card.textContent = cardText;
         
+        this.parentElement.appendChild(card);
+        this.parentElement.appendChild(addCardButton);
+        console.log(this.id);
+        cardInput.remove();
+        addButton.remove();
+
+
+        const data = {
+            nome: cardText,
+            descricao: cardText,
+            lista: listId
+        };
+        console.log (data);
+        if (cardText == null || cardText.trim() === "") {
+            console.error("Erro ao criar cartão: o nome do cartão está vazio.");
+            return;
+        }
+
+        fetch(`http://localhost/Kanban/BackEnd/Controller.php?endpoint=task`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+        })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Success:', data);
+                
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                card.remove();
+            });
     });
-}
 
-
+})
