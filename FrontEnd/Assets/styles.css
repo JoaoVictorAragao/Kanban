@@ -34,15 +34,19 @@ body {
     margin-bottom: 10px;
 }
 
+.card:hover{
+    box-shadow: 0 0 0 3px #3498db;
+}
+
 .baixa {
     background-color: #6ba3ff;
 }
 
-.design {
+.media {
     background-color: #b593ff;
 }
 
-.todo {
+.alta {
     background-color: #ff7474;
 }
 

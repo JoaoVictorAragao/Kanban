@@ -31,17 +31,23 @@ switch ($method) {
     case 'PUT':
         if ($endpoint == 'task' && isset($_GET['id'])) {
             updateTask($_GET['id'], $input);
+        } elseif ($endpoint == 'list' && isset($_GET['id'])) {
+            updateList($_GET['id'], $input);
         }
         break;
     case 'DELETE':
         if ($endpoint == 'task' && isset($_GET['id'])) {
             deleteTask($_GET['id']);
+        } elseif ($endpoint == 'list' && isset($_GET['id'])) {
+            deleteList($_GET['id']);
         }
         break;
     default:
         echo json_encode(["message" => "Método não suportado"]);
         break;
 }
+
+//TAREFAS
 
 function getAllTasks() {
     global $pdo;
@@ -89,6 +95,8 @@ function deleteTask($id) {
     echo json_encode(["message" => "Tarefa excluída com sucesso"]);
 }
 
+//LISTAS
+
 function getAllLists() {
     global $pdo;
     $stmt = $pdo->prepare("SELECT * FROM lista");
@@ -103,4 +111,21 @@ function createList($data) {
     $stmt->bindParam(':nome', $data['nome']);
     $stmt->execute();
     echo json_encode(["message" => "Lista criada com sucesso"]);
+}
+
+function updateList($id, $data) {
+    global $pdo;
+    $stmt = $pdo->prepare("UPDATE lista SET nome = :nome WHERE id = :id");
+    $stmt->bindParam(':id', $id);
+    $stmt->bindParam(':nome', $data['nome']);
+    $stmt->execute();
+    echo json_encode(["message" => "Lista atualizada com sucesso"]);
+}
+
+function deleteList($id) {
+    global $pdo;
+    $stmt = $pdo->prepare("DELETE FROM lista WHERE id = :id");
+    $stmt->bindParam(':id', $id);
+    $stmt->execute();
+    echo json_encode(["message" => "Lista excluída com sucesso"]);
 }
