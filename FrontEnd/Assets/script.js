@@ -20,7 +20,17 @@ async function recuperarTarefas() {
     }
 }
 
-//FAZER COM QUE ATUALIZE SEMPRE QUE UMA NOVA TAREFA FOR CRIADA
+async function recuperarTarefa(id) {
+    try {
+        const response = await fetch("http://localhost/Kanban/BackEnd/Controller.php?endpoint=task&id=" + id);
+        const task = await response.json();
+        return task;
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+//AJUSTAR PARA FAZER COM QUE ATUALIZE SEMPRE QUE UMA NOVA TAREFA FOR CRIADA
 async function renderTarefas() {
     const board = document.getElementById("kanban-board");
     const lists = await recuperarListas();
@@ -37,7 +47,7 @@ async function renderTarefas() {
                 card.setAttribute("id", task.id);
                 card.textContent = task.nome;
                 column.appendChild(card);
-                console.log(`List: ${list.nome}, Task: ${task.nome}`);
+                //console.log(`List: ${list.nome}, Task: ${task.nome}`);
             }
         });
         const addCardButton = document.createElement("button");
@@ -56,7 +66,7 @@ document.addEventListener("DOMContentLoaded", recuperarListas);
 document.addEventListener("DOMContentLoaded", renderTarefas);
 
 /*JQUERY*/
-
+//Adiciona um card no layout e depois o adiciona no banco
 $('.kanban-board').on('click', '.add-card', function (e) {
     const cardInput = document.createElement("input");
     cardInput.type = "text";
@@ -81,7 +91,7 @@ $('.kanban-board').on('click', '.add-card', function (e) {
         addCardButton.textContent = "+ Adicionar um cartão";
         card.classList.add("card");
         card.textContent = cardText;
-        
+
         this.parentElement.appendChild(card);
         this.parentElement.appendChild(addCardButton);
         console.log(this.id);
@@ -94,7 +104,7 @@ $('.kanban-board').on('click', '.add-card', function (e) {
             descricao: cardText,
             lista: listId
         };
-        console.log (data);
+        console.log(data);
         if (cardText == null || cardText.trim() === "") {
             console.error("Erro ao criar cartão: o nome do cartão está vazio.");
             return;
@@ -110,7 +120,7 @@ $('.kanban-board').on('click', '.add-card', function (e) {
             .then(response => response.json())
             .then(data => {
                 console.log('Success:', data);
-                
+
             })
             .catch((error) => {
                 console.error('Error:', error);
@@ -119,3 +129,56 @@ $('.kanban-board').on('click', '.add-card', function (e) {
     });
 
 })
+
+//Cria o botão para editar o card
+$(document).ready(function () {
+    $(document).on('mouseenter', 'div.card', function () {
+        const editCardButton = document.createElement("button");
+        editCardButton.classList.add("edit-card");
+        editCardButton.setAttribute("id", "modal")
+        const editCardImage = document.createElement("img");
+        editCardImage.src = "Assets/Images/pencil.png";
+        editCardButton.appendChild(editCardImage);
+        $(this).append(editCardButton);
+    }).on('mouseleave', '.card', function () {
+        $('.edit-card').remove();
+    });
+});
+
+//Aciona o botão para editar o card
+$(document).ready(function () {
+    $(document).on('click', '.edit-card', async function () {
+        $('.modal-overlay, .modal').fadeIn();
+        try {
+            const task = await recuperarTarefa($(this).parent().attr("id"));
+            const editCardInput = document.createElement("input");
+            const editDescInput = document.createElement("input")
+            editCardInput.type = "text";
+            editCardInput.value = task.nome;
+            editCardInput.classList.add("card-input");
+            editCardInput.setAttribute("id", task.id);
+            editDescInput.type = "text";
+            editDescInput.value = task.descricao;
+            editDescInput.classList.add("card-descricao")
+
+            //Botão para atualizar
+
+            const updateButton = document.createElement("button");
+            updateButton.classList.add("updateButton");
+            updateButton.textContent = "Atualizar";
+
+            
+            $('.modal-content').append(editCardInput);
+            $('.modal-content').append(editDescInput);
+            $('.modal-content').append(updateButton);
+        } catch (error) {
+            console.error('Error retrieving task:', error);
+        }
+    });
+
+    $('.modal-close, .modal-overlay').click(function () {
+        $('.modal-overlay, .modal').fadeOut();
+    });
+});
+
+
