@@ -30,6 +30,41 @@ async function recuperarTarefa(id) {
     }
 }
 
+function atualizarTarefas(id, taskName, taskDesc, taskList) {
+    const data = {
+        id: id,
+        nome: taskName,
+        descricao: taskDesc,
+        lista: taskList
+    };
+    try {
+        fetch("http://localhost/Kanban/BackEnd/Controller.php?endpoint=task",
+            {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            }
+        ).
+        then(response => response.json())
+        .then(data => {
+            console.log('Success:', data);
+
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+            card.remove();
+        });
+
+        return tasks;
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+
+
 //AJUSTAR PARA FAZER COM QUE ATUALIZE SEMPRE QUE UMA NOVA TAREFA FOR CRIADA
 async function renderTarefas() {
     const board = document.getElementById("kanban-board");
@@ -135,10 +170,8 @@ $(document).ready(function () {
     $(document).on('mouseenter', 'div.card', function () {
         const editCardButton = document.createElement("button");
         editCardButton.classList.add("edit-card");
-        editCardButton.setAttribute("id", "modal")
-        const editCardImage = document.createElement("img");
-        editCardImage.src = "Assets/Images/pencil.png";
-        editCardButton.appendChild(editCardImage);
+        editCardButton.setAttribute("data-modal", "modal-1")
+        editCardButton.textContent = "Editar";
         $(this).append(editCardButton);
     }).on('mouseleave', '.card', function () {
         $('.edit-card').remove();
@@ -147,38 +180,65 @@ $(document).ready(function () {
 
 //Aciona o botão para editar o card
 $(document).ready(function () {
+    // Abre o modal ao clicar no botão
     $(document).on('click', '.edit-card', async function () {
-        $('.modal-overlay, .modal').fadeIn();
         try {
             const task = await recuperarTarefa($(this).parent().attr("id"));
-            const editCardInput = document.createElement("input");
-            const editDescInput = document.createElement("input")
-            editCardInput.type = "text";
-            editCardInput.value = task.nome;
-            editCardInput.classList.add("card-input");
-            editCardInput.setAttribute("id", task.id);
-            editDescInput.type = "text";
-            editDescInput.value = task.descricao;
-            editDescInput.classList.add("card-descricao")
 
-            //Botão para atualizar
+            // Verifica se o modal já existe, caso contrário, cria um
+            if ($('#modal-1').length === 0) {
 
-            const updateButton = document.createElement("button");
-            updateButton.classList.add("updateButton");
-            updateButton.textContent = "Atualizar";
+                const modalHTML = `
+                    <dialog id="modal-1">
+                        <form>
+                            <div class="modal-header">
+                                <h1 class="modal-title">${task.nome}</h1>
+                                <button class="close-modal" type="button">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="input-group">
+                                    <label for="taskName">Nome da Tarefa</label>
+                                    <input type="text" id="taskName" name="taskName" value="${task.nome}">
+                                </div>
+                                <div class="input-group">
+                                    <label for="taskDesc">Descrição</label>
+                                    <input type="text" id="taskDescricao" value="${task.descricao}">
+                                </div>
+                                <button id="updateButton" class="updateButton" type="button">Salvar</button>
+                            </div>
+                        </form>
+                    </dialog>
+                `;
+                $('body').append(modalHTML);
+            }
 
-            
-            $('.modal-content').append(editCardInput);
-            $('.modal-content').append(editDescInput);
-            $('.modal-content').append(updateButton);
+            // Exibe o modal
+            $('.modal-overlay').fadeIn();
+            $('#modal-1').fadeIn();
         } catch (error) {
             console.error('Error retrieving task:', error);
         }
     });
 
-    $('.modal-close, .modal-overlay').click(function () {
-        $('.modal-overlay, .modal').fadeOut();
+    // Fecha o modal ao clicar no botão de fechar
+    $(document).on('click', '.close-modal', function () {
+        $('#modal-1').fadeOut();
+        $('.modal-overlay').fadeOut();
+        $('#modal-1').remove();
+    });
+
+    // Fecha o modal ao clicar fora dele
+    $(document).on('click', function (e) {
+        const dialog = $('#modal-1');
+        if (dialog.is(':visible') && !dialog.find(e.target).length && !$(e.target).closest('.edit-card').length) {
+            dialog.fadeOut();
+            $('.modal-overlay').fadeOut();
+            $('#modal-1').remove();
+        }
     });
 });
+
 
 
