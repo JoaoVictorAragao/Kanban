@@ -37,30 +37,21 @@ function atualizarTarefas(id, taskName, taskDesc, taskList) {
         descricao: taskDesc,
         lista: taskList
     };
-    try {
-        fetch("http://localhost/Kanban/BackEnd/Controller.php?endpoint=task",
-            {
+        fetch("http://localhost/Kanban/BackEnd/Controller.php?endpoint=task", {
                 method: 'PUT',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(data)
-            }
-        ).
-        then(response => response.json())
-        .then(data => {
-            console.log('Success:', data);
+                body: JSON.stringify(data),
+            }).
+            then(response => response.json())
+            .then(data => {
+                console.log('Success:', data);
 
-        })
-        .catch((error) => {
-            console.error('Error:', error);
-            card.remove();
-        });
-
-        return tasks;
-    } catch (error) {
-        console.error(error);
-    }
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
 }
 
 
@@ -191,6 +182,8 @@ $(document).ready(function () {
                 const modalHTML = `
                     <dialog id="modal-1">
                         <form>
+                            <input type="hidden" id="taskId" name="taskId" value="${task.id}">
+                            <input type="hidden" id="taskListId" name="taskListId" value="${task.lista}">
                             <div class="modal-header">
                                 <h1 class="modal-title">${task.nome}</h1>
                                 <button class="close-modal" type="button">
@@ -240,5 +233,28 @@ $(document).ready(function () {
     });
 });
 
+//Atualiza a tarefa
 
+$(document).ready(function () {
+    $(document).on('click', '#updateButton', async function () {
+        try {
+            const task = $('#taskId').val();
+            const taskName = $('#taskName').val();
+            const taskDescricao = $('#taskDescricao').val();
+            const taskLista = $('#taskListId').val();
+            if (taskName == null || taskName.trim() === "") {
+                console.error("Erro ao atualizar cartão: o nome do cartão está vazio.");
+                return;
+            }
+
+            await atualizarTarefas(task, taskName, taskDescricao, taskLista);
+            $(`#kanban-board .card[id="${task}"]`).text(taskName);
+            $('#modal-1').fadeOut();
+            $('.modal-overlay').fadeOut();
+            $('#modal-1').remove();
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    });
+});
 

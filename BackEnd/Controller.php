@@ -31,17 +31,17 @@ switch ($method) {
         }
         break;
     case 'PUT':
-        if ($endpoint == 'task' && isset($_GET['id'])) {
-            updateTask($_GET['id'], $input);
+        if ($endpoint == 'task' && isset($input['id'])) {
+            updateTask($input['id'], $input);
         } elseif ($endpoint == 'list' && isset($_GET['id'])) {
-            updateList($_GET['id'], $input);
+            updateList($input['id'], $input['id']);
         }
         break;
     case 'DELETE':
-        if ($endpoint == 'task' && isset($_GET['id'])) {
-            deleteTask($_GET['id']);
-        } elseif ($endpoint == 'list' && isset($_GET['id'])) {
-            deleteList($_GET['id']);
+        if ($endpoint == 'task' && $input['id']) {
+            deleteTask($input['id']);
+        } elseif ($endpoint == 'list' && $input['id']) {
+            deleteList($input['id']);
         }
         break;
     default:
