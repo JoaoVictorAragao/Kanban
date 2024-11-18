@@ -26,6 +26,38 @@ body {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
+.kanban-column-add {
+    background-color: #f7f7f7;
+    border-radius: 8px;
+    width: 200px;
+    padding: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    opacity: 0.2;
+}
+
+.kanban-column-input {
+    background-color: #fff;
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border: none;
+    outline: none;
+    width: 100%;
+    margin-top: 5px;
+    border-radius: 5px;
+}
+
+.kanban-column-input:focus {
+    box-shadow: 0 0 0 3px #3498db;
+    border: none;
+    outline: none;
+}
+
+.kanban-column-add:hover {
+    opacity: 1;
+}
+
 .column-header {
     font-weight: bold;
     text-align: center;
@@ -51,7 +83,7 @@ body {
     background-color: #ff7474;
 }
 
-.doing {
+.nova {
     background-color: #ff7474;
 }
 
@@ -124,14 +156,13 @@ body {
 }
 
 .edit-card {
-    /*background-repeat: no-repeat;
-    border: none;
-    align-items: end;*/
+    display: flex;
+    justify-content: space-between;
     background-color: #6366F1;
     color: #FFFFFF;
     border: none;
     border-radius: 8px;
-    padding: 10px 16px;
+    padding: 10px;
     font-size: 14px;
     cursor: pointer;
 
@@ -161,38 +192,6 @@ body {
     outline: none;
 }
 
-/*
-.modal {
-    display: none;
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 600px;
-    padding: 220px;
-    background: #fff;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    z-index: 1001;
-    border-radius: 8px;
-    text-align: center;
-}
-*/
-/* Botão para fechar o modal */
-/*.modal-close {
-    background-image: url('Assets/Images/close.png');
-    position: absolute;
-    top: 0;
-    right: 0;
-    cursor: pointer;
-    padding: 8px 16px;
-    background-color: gray;
-    color: #fff;
-    border: none;
-    border-radius: 0 0 0 4px;
-    font-size: 14px;
-    border-left: 1px solid gray;
-}
-*/
 .modal-overlay {
     display: none;
     position: fixed;
@@ -294,6 +293,16 @@ dialog {
 
 .updateButton {
     background-color: #6366F1;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.deleteButton {
+    background-color: rgb(220, 53, 69);
     color: #FFFFFF;
     border: none;
     border-radius: 8px;

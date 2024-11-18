@@ -37,21 +37,21 @@ function atualizarTarefas(id, taskName, taskDesc, taskList) {
         descricao: taskDesc,
         lista: taskList
     };
-        fetch("http://localhost/Kanban/BackEnd/Controller.php?endpoint=task", {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(data),
-            }).
-            then(response => response.json())
-            .then(data => {
-                console.log('Success:', data);
+    fetch("http://localhost/Kanban/BackEnd/Controller.php?endpoint=task", {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+    }).
+        then(response => response.json())
+        .then(data => {
+            console.log('Success:', data);
 
-            })
-            .catch((error) => {
-                console.error('Error:', error);
-            });
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+        });
 }
 
 
@@ -83,6 +83,46 @@ async function renderTarefas() {
         column.appendChild(addCardButton);
         board.appendChild(column);
     });
+
+    const addBoard = document.createElement("div");
+    addBoard.classList.add("kanban-column-add");
+    addBoard.textContent = "+ Adicionar uma lista";
+    board.appendChild(addBoard);
+
+}
+
+function deletarTarefa(id) {
+    fetch("http://localhost/Kanban/BackEnd/Controller.php?endpoint=task", {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id: id }),
+    }).
+        then(response => response.json())
+        .then(data => {
+            console.log('Success:', data);
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+        });
+}
+
+function criarLista(listaNome, prioridade) {
+    fetch("http://localhost/Kanban/BackEnd/Controller.php?endpoint=list", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ nome: listaNome, urgencia: prioridade }),
+    }).
+        then(response => response.json())
+        .then(data => {
+            console.log('Success:', data);
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+        });
 
 }
 
@@ -200,6 +240,7 @@ $(document).ready(function () {
                                     <input type="text" id="taskDescricao" value="${task.descricao}">
                                 </div>
                                 <button id="updateButton" class="updateButton" type="button">Salvar</button>
+                                <button id="deleteButton" class="deleteButton" type="button">Excluir</button>
                             </div>
                         </form>
                     </dialog>
@@ -258,3 +299,58 @@ $(document).ready(function () {
     });
 });
 
+//Deletar tarefa
+$(document).ready(function () {
+    $(document).on('click', '#deleteButton', async function () {
+        try {
+            const task = $('#taskId').val();
+            deletarTarefa(task);
+            $(`#kanban-board .card[id="${task}"]`).remove();
+            $('#modal-1').fadeOut();
+            $('.modal-overlay').fadeOut();
+            $('#modal-1').remove();
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    });
+});
+
+//Criar a lista
+$(document).ready(function () {
+    $(document).on('click', '.kanban-column-add', function () {
+        $('.kanban-column-add').remove();
+
+            const listaHTML = `
+            <div id="adiciona-coluna" class="kanban-column">
+                <div class="column-header nova">
+                    <label> Cadastrar lista</label>
+                </div>
+                <label>Nome da Coluna</label>
+                <input class="kanban-column-input"></input>
+                <label>Urgência</label>
+                <form>
+                    <label><input type="radio" name="prioridade" value="baixa">Baixa</label>
+                    <label><input type="radio" name="prioridade" value="media">Média</label>
+                    <label><input type="radio" name="prioridade" value="alta">Alta</label>
+                </form>
+                </br>
+                <button class="add-card-button">Adicionar</button>
+            </div>`;
+            $('#kanban-board').append(listaHTML);
+    });
+},
+
+    $(document).on('click', function (e) {
+        const dialog = $('#adiciona-coluna');
+        if (dialog.is(':visible') && !dialog.find(e.target).length && !$(e.target).closest('.kanban-column-add').length) {
+            $('#adiciona-coluna').remove();
+            const board = document.getElementById("kanban-board");
+            const addBoard = document.createElement("div");
+            addBoard.classList.add("kanban-column-add");
+            addBoard.textContent = "+ Adicionar uma lista";
+            board.appendChild(addBoard);
+
+        }
+    })
+
+);
