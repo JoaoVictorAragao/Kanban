@@ -354,3 +354,28 @@ $(document).ready(function () {
     })
 
 );
+
+$(document).on('click', '.add-card-button', async function () {
+    try {
+        const listName = $('.kanban-column-input').val();
+        const priority = $('input[name="prioridade"]:checked').val();
+        $('#adiciona-coluna').remove();
+        criarLista(listName, priority);
+        const board = document.getElementById("kanban-board");
+        const column = document.createElement("div");
+        const header = document.createElement("div");
+        const addBoard = document.createElement("div");
+        column.classList.add("kanban-column");
+        header.classList.add("column-header");
+        header.classList.add(priority);
+        addBoard.classList.add("kanban-column-add");
+        addBoard.textContent = "+ Adicionar uma lista";
+        header.textContent = listName;
+        column.appendChild(header);
+        board.appendChild(column);
+        board.appendChild(addBoard);
+              
+    } catch (error) {
+        console.error('Error:', error);
+    }
+});
