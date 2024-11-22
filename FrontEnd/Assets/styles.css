@@ -310,3 +310,117 @@ dialog {
     font-size: 14px;
     cursor: pointer;
 }
+
+.dropdown-lista {
+    min-width: none;
+    position: relative;
+    display: inline-block;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    background-color: #fff;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.dropdown-lista * {
+    box-sizing: border-box;
+}
+
+.select-lista {
+    border: none;
+    outline: none;
+    padding: 10px;
+    border-radius: 4px;
+    resize: none;
+    /* Evita o redimensionamento do campo */
+    background-color: #fff;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border: none;
+    outline: none;
+    margin-top: 5px;
+    transition: background 0.3s;
+}
+
+.select-clicked {
+    border: 2px #000 solid;
+    background-color: #fff;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border: none;
+    outline: none;
+    margin-top: 5px;
+    transition: background 0.3s;
+}
+
+.select-lista:hover {
+    background-color: #f7f7f7;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border: none;
+    outline: none;
+    margin-top: 5px;
+    transition: background 0.3s;
+}
+
+.current-lista {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s;
+    border: none;
+    outline: none;
+    margin-top: 5px;
+}
+
+.current-lista-rotate{
+    transform: rotate(180deg);
+}
+
+.options-lista{
+    list-style: none;
+    padding: 0.2em 0.5em;
+    background: #323741;
+    border: 1px #363a43 solid;
+    box-shadow: 0 0.5em 1em rgba(0, 0, 0, 0.2);
+    border-radius: 0.5em;
+    color: #9fa5b5;
+    position: absolute;
+    top: 3em;
+    left: 50%;
+    width: 100%;
+    transform: tranlatex(-50%);
+    opacity: 0;
+    display: none;
+    transition: 0.2s;
+    z-index: 1;
+}
+
+.options-lista li{
+    padding: 0.5em 0;
+    margin: 0.2em 0;
+    border-radius: 0.5em;
+    transition: 0.2s;
+    cursor: pointer;
+
+}
+
+.options-lista li:hover{
+    background: #6366f1;
+}
+
+.active{
+    background: #6366f1;
+}
+
+.options-lista-open{
+    display: block;
+    opacity: 1;
+}
+

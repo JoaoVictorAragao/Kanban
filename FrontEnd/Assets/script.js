@@ -1,5 +1,3 @@
-
-
 async function recuperarListas() {
     try {
         const response = await fetch("http://localhost/Kanban/BackEnd/Controller.php?endpoint=list");
@@ -215,7 +213,8 @@ $(document).ready(function () {
     $(document).on('click', '.edit-card', async function () {
         try {
             const task = await recuperarTarefa($(this).parent().attr("id"));
-
+            const list = await recuperarListas();
+            
             // Verifica se o modal já existe, caso contrário, cria um
             if ($('#modal-1').length === 0) {
 
@@ -239,6 +238,12 @@ $(document).ready(function () {
                                     <label for="taskDesc">Descrição</label>
                                     <input type="text" id="taskDescricao" value="${task.descricao}">
                                 </div>
+                                <div class="input-group">
+                                    <label for="taskList">Lista pertencente:</label>
+                                    <select id="taskList" name="taskListDropdown" class="dropdown-lista">
+                                        
+                                    </select>
+                                </div>
                                 <button id="updateButton" class="updateButton" type="button">Salvar</button>
                                 <button id="deleteButton" class="deleteButton" type="button">Excluir</button>
                             </div>
@@ -246,6 +251,30 @@ $(document).ready(function () {
                     </dialog>
                 `;
                 $('body').append(modalHTML);
+
+                // Popular o dropdown com as listas
+                const selectedList = list.find(item => item.id == task.lista);
+                const otherLists = list.filter(item => item.id != task.lista);
+                const selectedListItem = document.createElement("option");
+                selectedListItem.classList.add("selected");
+                selectedListItem.textContent = selectedList.nome;
+                selectedListItem.setAttribute("id", selectedList.id);
+                $('.dropdown-lista').append(selectedListItem);
+                otherLists.forEach(item => {
+                    const listItem = document.createElement("option");
+                    listItem.textContent = item.nome;
+                    listItem.setAttribute("id", item.id);
+                    $('.dropdown-lista').append(listItem);
+                });
+                // Selecionar a lista correta
+                $('.dropdown-lista').on('change', function () {
+                    var selectedList = $(this).find('option:selected').val();
+                    var selectedListId = $(this).find('option:selected').attr('id');
+                    console.log(selectedList);
+                    $(this).find('option').removeClass('selected');
+                    $(`#modal-1 #taskListId`).val(selectedListId);
+                });
+
             }
 
             // Exibe o modal
@@ -283,12 +312,14 @@ $(document).ready(function () {
             const taskName = $('#taskName').val();
             const taskDescricao = $('#taskDescricao').val();
             const taskLista = $('#taskListId').val();
+
             if (taskName == null || taskName.trim() === "") {
                 console.error("Erro ao atualizar cartão: o nome do cartão está vazio.");
                 return;
             }
 
             await atualizarTarefas(task, taskName, taskDescricao, taskLista);
+            $(`#kanban-board .card[id="${task}"]`).parent().attr('id', taskLista);
             $(`#kanban-board .card[id="${task}"]`).text(taskName);
             $('#modal-1').fadeOut();
             $('.modal-overlay').fadeOut();
@@ -379,3 +410,11 @@ $(document).on('click', '.add-card-button', async function () {
         console.error('Error:', error);
     }
 });
+
+//Dropdown para select de listas
+/*
+$(document).ready(function () {
+    $(document).on('click', '.select-lista', function () {
+        $(this).next('.options-lista').slideToggle();
+    });
+});*/
