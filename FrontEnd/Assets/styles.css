@@ -16,6 +16,8 @@ body {
 .kanban-board {
     display: flex;
     gap: 20px;
+    overflow-x: scroll;
+    white-space: nowrap;
 }
 
 .kanban-column {

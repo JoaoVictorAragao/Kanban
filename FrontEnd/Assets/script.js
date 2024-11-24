@@ -71,7 +71,6 @@ async function renderTarefas() {
                 card.setAttribute("id", task.id);
                 card.textContent = task.nome;
                 column.appendChild(card);
-                //console.log(`List: ${list.nome}, Task: ${task.nome}`);
             }
         });
         const addCardButton = document.createElement("button");
@@ -191,7 +190,7 @@ $('.kanban-board').on('click', '.add-card', function (e) {
                 card.remove();
             });
     });
-
+    
 })
 
 //Cria o botão para editar o card
@@ -214,7 +213,7 @@ $(document).ready(function () {
         try {
             const task = await recuperarTarefa($(this).parent().attr("id"));
             const list = await recuperarListas();
-            
+
             // Verifica se o modal já existe, caso contrário, cria um
             if ($('#modal-1').length === 0) {
 
@@ -222,6 +221,7 @@ $(document).ready(function () {
                     <dialog id="modal-1">
                         <form>
                             <input type="hidden" id="taskId" name="taskId" value="${task.id}">
+                            <input type="hidden" id="taskCurrent" name="taskCurrent" value="${task.lista}">
                             <input type="hidden" id="taskListId" name="taskListId" value="${task.lista}">
                             <div class="modal-header">
                                 <h1 class="modal-title">${task.nome}</h1>
@@ -270,7 +270,6 @@ $(document).ready(function () {
                 $('.dropdown-lista').on('change', function () {
                     var selectedList = $(this).find('option:selected').val();
                     var selectedListId = $(this).find('option:selected').attr('id');
-                    console.log(selectedList);
                     $(this).find('option').removeClass('selected');
                     $(`#modal-1 #taskListId`).val(selectedListId);
                 });
@@ -312,18 +311,25 @@ $(document).ready(function () {
             const taskName = $('#taskName').val();
             const taskDescricao = $('#taskDescricao').val();
             const taskLista = $('#taskListId').val();
+            const taskCurrent = $('#taskCurrent').val();
 
             if (taskName == null || taskName.trim() === "") {
                 console.error("Erro ao atualizar cartão: o nome do cartão está vazio.");
                 return;
             }
 
-            await atualizarTarefas(task, taskName, taskDescricao, taskLista);
-            $(`#kanban-board .card[id="${task}"]`).parent().attr('id', taskLista);
-            $(`#kanban-board .card[id="${task}"]`).text(taskName);
+            await atualizarTarefas(task, taskName, taskDescricao, taskLista)
+
+            if (taskCurrent != taskLista) {
+                const taskElement = $(`#kanban-board .card[id="${task}"]`).detach(); // Remove sem destruir o elemento
+                $(`#kanban-board .kanban-column[id="${taskLista}"]`).append(taskElement);
+
+            } else $(`#kanban-board .card[id="${task}"]`).text(taskName);
+
             $('#modal-1').fadeOut();
             $('.modal-overlay').fadeOut();
             $('#modal-1').remove();
+
         } catch (error) {
             console.error('Error:', error);
         }
@@ -351,13 +357,15 @@ $(document).ready(function () {
     $(document).on('click', '.kanban-column-add', function () {
         $('.kanban-column-add').remove();
 
-            const listaHTML = `
+        const listaHTML = `
             <div id="adiciona-coluna" class="kanban-column">
                 <div class="column-header nova">
                     <label> Cadastrar lista</label>
                 </div>
                 <label>Nome da Coluna</label>
+                </br>
                 <input class="kanban-column-input"></input>
+                </br>
                 <label>Urgência</label>
                 <form>
                     <label><input type="radio" name="prioridade" value="baixa">Baixa</label>
@@ -365,9 +373,9 @@ $(document).ready(function () {
                     <label><input type="radio" name="prioridade" value="alta">Alta</label>
                 </form>
                 </br>
-                <button class="add-card-button">Adicionar</button>
+                <button class="add-list-button">Adicionar</button>
             </div>`;
-            $('#kanban-board').append(listaHTML);
+        $('#kanban-board').append(listaHTML);
     });
 },
 
@@ -386,7 +394,7 @@ $(document).ready(function () {
 
 );
 
-$(document).on('click', '.add-card-button', async function () {
+$(document).on('click', '.add-list-button', async function () {
     try {
         const listName = $('.kanban-column-input').val();
         const priority = $('input[name="prioridade"]:checked').val();
@@ -405,16 +413,9 @@ $(document).on('click', '.add-card-button', async function () {
         column.appendChild(header);
         board.appendChild(column);
         board.appendChild(addBoard);
-              
+
     } catch (error) {
         console.error('Error:', error);
     }
 });
 
-//Dropdown para select de listas
-/*
-$(document).ready(function () {
-    $(document).on('click', '.select-lista', function () {
-        $(this).next('.options-lista').slideToggle();
-    });
-});*/
