@@ -105,22 +105,31 @@ function deletarTarefa(id) {
         });
 }
 
-function criarLista(listaNome, prioridade) {
-    fetch("http://localhost/Kanban/BackEnd/Controller.php?endpoint=list", {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ nome: listaNome, urgencia: prioridade }),
-    }).
-        then(response => response.json())
-        .then(data => {
-            console.log('Success:', data);
-        })
-        .catch((error) => {
-            console.error('Error:', error);
+async function criarLista(listaNome, prioridade) {
+    if (!listaNome || !prioridade) {
+        console.error('Error: listaNome or prioridade is null or undefined.');
+        return;
+    }
+
+    try {
+        const response = await fetch("http://localhost/Kanban/BackEnd/Controller.php?endpoint=list", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ nome: listaNome, urgencia: prioridade }),
         });
 
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        return data['id'];
+
+    } catch (error) {
+        console.error('Error:', error);
+    }
 }
 
 //window.onload = renderTarefas;
@@ -130,68 +139,87 @@ document.addEventListener("DOMContentLoaded", renderTarefas);
 
 /*JQUERY*/
 //Adiciona um card no layout e depois o adiciona no banco
-$('.kanban-board').on('click', '.add-card', function (e) {
-    const cardInput = document.createElement("input");
-    cardInput.type = "text";
-    cardInput.placeholder = "Digite o texto do cartão";
-    cardInput.classList.add("card-input");
-    cardInput.setAttribute("id", this.id);
-    this.parentElement.appendChild(cardInput);
+$(document).ready(function () {
+    $('.kanban-board').on('click', '.add-card', function (e) {
+        const cardInput = document.createElement("input");
+        cardInput.type = "text";
+        cardInput.placeholder = "Digite o texto do cartão";
+        cardInput.classList.add("card-input");
+        cardInput.setAttribute("id", this.id);
+        this.parentElement.appendChild(cardInput);
 
-    const listId = this.id;
+        const listId = this.id;
 
-    const addButton = document.createElement("button");
-    addButton.textContent = "Adicionar";
-    addButton.classList.add("add-card-button");
-    this.parentElement.appendChild(addButton);
-    this.remove();
+        const addButton = document.createElement("button");
+        addButton.textContent = "Adicionar";
+        addButton.classList.add("add-card-button");
+        this.parentElement.appendChild(addButton);
+        this.remove();
 
-    addButton.addEventListener("click", function () {
-        const cardText = cardInput.value;
-        const card = document.createElement("div");
-        const addCardButton = document.createElement("button");
-        addCardButton.classList.add("add-card");
-        addCardButton.textContent = "+ Adicionar um cartão";
-        card.classList.add("card");
-        card.textContent = cardText;
+        addButton.addEventListener("click", function () {
+            const cardText = cardInput.value;
+            const card = document.createElement("div");
+            const addCardButton = document.createElement("button");
+            addCardButton.classList.add("add-card");
+            addCardButton.textContent = "+ Adicionar um cartão";
+            addCardButton.setAttribute("id", listId);
+            card.classList.add("card");
+            card.textContent = cardText;
 
-        this.parentElement.appendChild(card);
-        this.parentElement.appendChild(addCardButton);
-        console.log(this.id);
-        cardInput.remove();
-        addButton.remove();
+            this.parentElement.appendChild(card);
+            this.parentElement.appendChild(addCardButton);
+            console.log(this.id);
+            cardInput.remove();
+            addButton.remove();
 
 
-        const data = {
-            nome: cardText,
-            descricao: cardText,
-            lista: listId
-        };
-        console.log(data);
-        if (cardText == null || cardText.trim() === "") {
-            console.error("Erro ao criar cartão: o nome do cartão está vazio.");
-            return;
-        }
+            const data = {
+                nome: cardText,
+                descricao: cardText,
+                lista: listId
+            };
+            console.log(data);
+            if (cardText == null || cardText.trim() === "") {
+                console.error("Erro ao criar cartão: o nome do cartão está vazio.");
+                return;
+            }
 
-        fetch(`http://localhost/Kanban/BackEnd/Controller.php?endpoint=task`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(data),
-        })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Success:', data);
-
+            fetch(`http://localhost/Kanban/BackEnd/Controller.php?endpoint=task`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
             })
-            .catch((error) => {
-                console.error('Error:', error);
-                card.remove();
-            });
-    });
-    
-})
+                .then(response => response.json())
+                .then(data => {
+                    //console.log('Success:', data);
+                    return data;
+
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                    card.remove();
+                });
+        });
+
+    })
+},
+    $(document).on('click', function (e) {
+        const dialog = $('.card-input');
+        if (dialog.is(':visible') && !dialog.is(e.target) && !$(e.target).closest('.add-card').length) {
+            const column = dialog.closest('.kanban-column');
+            $('.card-input').remove();
+            $('.add-card-button').remove();
+            const addCard = document.createElement("button");
+            addCard.classList.add("add-card");
+            addCard.textContent = "+ Adicionar um cartão";
+            column.append(addCard);
+        }
+    })
+
+);
+
 
 //Cria o botão para editar o card
 $(document).ready(function () {
@@ -376,6 +404,8 @@ $(document).ready(function () {
                 <button class="add-list-button">Adicionar</button>
             </div>`;
         $('#kanban-board').append(listaHTML);
+
+        
     });
 },
 
@@ -398,19 +428,29 @@ $(document).on('click', '.add-list-button', async function () {
     try {
         const listName = $('.kanban-column-input').val();
         const priority = $('input[name="prioridade"]:checked').val();
+        console.log(priority);
         $('#adiciona-coluna').remove();
-        criarLista(listName, priority);
+        const response = await criarLista(listName, priority);
+
         const board = document.getElementById("kanban-board");
         const column = document.createElement("div");
         const header = document.createElement("div");
         const addBoard = document.createElement("div");
+        const addCard = document.createElement("button");
+
+        addCard.classList.add("add-card");
+        addCard.textContent = "+ Adicionar um cartão";
+        addCard.setAttribute("id", response);
         column.classList.add("kanban-column");
+        column.setAttribute("id", response);
         header.classList.add("column-header");
         header.classList.add(priority);
         addBoard.classList.add("kanban-column-add");
         addBoard.textContent = "+ Adicionar uma lista";
         header.textContent = listName;
+
         column.appendChild(header);
+        column.appendChild(addCard);
         board.appendChild(column);
         board.appendChild(addBoard);
 

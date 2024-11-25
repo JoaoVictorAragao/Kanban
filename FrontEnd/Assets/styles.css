@@ -149,6 +149,8 @@ body {
     /* Sombra */
     transition: background-color 0.3s ease;
     /* Transição suave para o hover */
+    display: block;
+    
 }
 
 /* Efeito de hover */
@@ -426,3 +428,25 @@ dialog {
     opacity: 1;
 }
 
+.add-list-button {
+    background-color: #4a90e2;
+    /* Cor de fundo azul */
+    color: #ffffff;
+    /* Cor do texto branco */
+    padding: 10px 20px;
+    /* Espaçamento interno */
+    border: none;
+    /* Sem borda */
+    border-radius: 5px;
+    /* Bordas arredondadas */
+    cursor: pointer;
+    /* Cursor de mãozinha */
+    font-size: 14px;
+    /* Tamanho da fonte */
+    font-weight: bold;
+    /* Texto em negrito */
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+    /* Sombra */
+    transition: background-color 0.3s ease;
+    /* Transição suave para o hover */
+}

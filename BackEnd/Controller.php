@@ -129,7 +129,8 @@ function createList($data)
     $stmt = $pdo->prepare("INSERT INTO lista (nome) VALUES (:nome)");
     $stmt->bindParam(':nome', $data['nome']);
     $stmt->execute();
-    echo json_encode(["message" => "Lista criada com sucesso"]);
+    $id = $pdo->lastInsertId();
+    echo json_encode(['id' => $id]);
 }
 
 function updateList($id, $data)
