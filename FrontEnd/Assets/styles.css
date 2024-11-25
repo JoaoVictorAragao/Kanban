@@ -95,6 +95,7 @@ body {
     padding: 10px;
     margin-bottom: 10px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    position: relative;
 }
 
 .add-card {
@@ -150,7 +151,7 @@ body {
     transition: background-color 0.3s ease;
     /* Transição suave para o hover */
     display: block;
-    
+
 }
 
 /* Efeito de hover */
@@ -160,15 +161,19 @@ body {
 }
 
 .edit-card {
-    display: flex;
-    justify-content: space-between;
-    background-color: #6366F1;
-    color: #FFFFFF;
+    background-color: transparent;
     border: none;
-    border-radius: 8px;
-    padding: 10px;
-    font-size: 14px;
-    cursor: pointer;
+    position: absolute;
+
+}
+
+.edit-card:hover {
+    background-color: #89CFF0;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: inline-block;
+    transition: background-color 0.3s ease;
 
 }
 
@@ -233,8 +238,10 @@ dialog {
     border-radius: 8px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     padding: 20px;
-    z-index: 1000; /* Fica na frente do backdrop */
-    display: none; /* Inicialmente escondido */
+    z-index: 1000;
+    /* Fica na frente do backdrop */
+    display: none;
+    /* Inicialmente escondido */
 }
 
 /* Cabeçalho do modal */
@@ -383,11 +390,11 @@ dialog {
     margin-top: 5px;
 }
 
-.current-lista-rotate{
+.current-lista-rotate {
     transform: rotate(180deg);
 }
 
-.options-lista{
+.options-lista {
     list-style: none;
     padding: 0.2em 0.5em;
     background: #323741;
@@ -406,7 +413,7 @@ dialog {
     z-index: 1;
 }
 
-.options-lista li{
+.options-lista li {
     padding: 0.5em 0;
     margin: 0.2em 0;
     border-radius: 0.5em;
@@ -415,15 +422,15 @@ dialog {
 
 }
 
-.options-lista li:hover{
+.options-lista li:hover {
     background: #6366f1;
 }
 
-.active{
+.active {
     background: #6366f1;
 }
 
-.options-lista-open{
+.options-lista-open {
     display: block;
     opacity: 1;
 }

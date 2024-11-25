@@ -78,7 +78,8 @@ function createTask($data)
     $stmt->bindParam(':descricao', $data['descricao']);
     $stmt->bindParam(':lista', $data['lista']);
     $stmt->execute();
-    echo json_encode(["message" => "Tarefa criada com sucesso"]);
+    $id = $pdo->lastInsertId();
+    echo json_encode(["id" => $id]);
 }
 
 function updateTask($id, $data)

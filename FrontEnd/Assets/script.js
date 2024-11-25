@@ -77,6 +77,7 @@ async function renderTarefas() {
         addCardButton.classList.add("add-card");
         addCardButton.setAttribute("id", list.id);
         addCardButton.textContent = "+ Adicionar um cartão";
+        //addCardButton.setAttribute("name", "Criado o card ao iniciar");
         column.appendChild(addCardButton);
         board.appendChild(column);
     });
@@ -132,6 +133,33 @@ async function criarLista(listaNome, prioridade) {
     }
 }
 
+async function criarTarefa(taskName, taskDesc, taskList) {
+    if (!taskName || !taskDesc || !taskList) {
+        console.error('Error: taskName or taskDesc or taskList is null or undefined.');
+        return;
+    }
+
+    try {
+        const response = await fetch("http://localhost/Kanban/BackEnd/Controller.php?endpoint=task", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ nome: taskName, descricao: taskDesc, lista: taskList }),
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        return data['id'];
+
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
+
 //window.onload = renderTarefas;
 document.addEventListener("DOMContentLoaded", recuperarTarefas);
 document.addEventListener("DOMContentLoaded", recuperarListas);
@@ -156,51 +184,25 @@ $(document).ready(function () {
         this.parentElement.appendChild(addButton);
         this.remove();
 
-        addButton.addEventListener("click", function () {
-            const cardText = cardInput.value;
-            const card = document.createElement("div");
-            const addCardButton = document.createElement("button");
-            addCardButton.classList.add("add-card");
-            addCardButton.textContent = "+ Adicionar um cartão";
-            addCardButton.setAttribute("id", listId);
-            card.classList.add("card");
-            card.textContent = cardText;
+        addButton.addEventListener("click", async function () {
+            const listElement = $(`.kanban-column[id="${listId}"]`);
+            const cardTextInput = cardInput.value;
+            const taskId = await criarTarefa(cardTextInput, cardTextInput, listId);
+            const cardElement = document.createElement("div");
+            const addCardButtonElement = document.createElement("button");
+            addCardButtonElement.classList.add("add-card");
+            addCardButtonElement.textContent = "+ Adicionar um cartão";
+            addCardButtonElement.setAttribute("id", listId);
+            //addCardButtonElement.setAttribute("name", "Criado o card");
+            cardElement.classList.add("card");
+            cardElement.textContent = cardTextInput;
+            cardElement.setAttribute("id", taskId);
 
-            this.parentElement.appendChild(card);
-            this.parentElement.appendChild(addCardButton);
-            console.log(this.id);
+            listElement.append(cardElement);
+            listElement.append(addCardButtonElement);
             cardInput.remove();
             addButton.remove();
 
-
-            const data = {
-                nome: cardText,
-                descricao: cardText,
-                lista: listId
-            };
-            console.log(data);
-            if (cardText == null || cardText.trim() === "") {
-                console.error("Erro ao criar cartão: o nome do cartão está vazio.");
-                return;
-            }
-
-            fetch(`http://localhost/Kanban/BackEnd/Controller.php?endpoint=task`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(data),
-            })
-                .then(response => response.json())
-                .then(data => {
-                    //console.log('Success:', data);
-                    return data;
-
-                })
-                .catch((error) => {
-                    console.error('Error:', error);
-                    card.remove();
-                });
         });
 
     })
@@ -211,10 +213,19 @@ $(document).ready(function () {
             const column = dialog.closest('.kanban-column');
             $('.card-input').remove();
             $('.add-card-button').remove();
-            const addCard = document.createElement("button");
-            addCard.classList.add("add-card");
-            addCard.textContent = "+ Adicionar um cartão";
-            column.append(addCard);
+            const lastCard = column.children('.card').last();
+            const addCard = column.children('.add-card').first();
+            if (!addCard.length) {
+                addCard = document.createElement("button");
+                addCard.classList.add("add-card");
+                addCard.textContent = "+ Adicionar um cartão";
+                //addCard.setAttribute("name", "Adicionando quando aperta fora");
+                if (lastCard.length) {
+                    lastCard.after(addCard);
+                } else {
+                    column.prepend(addCard);
+                }
+            }
         }
     })
 
@@ -226,8 +237,9 @@ $(document).ready(function () {
     $(document).on('mouseenter', 'div.card', function () {
         const editCardButton = document.createElement("button");
         editCardButton.classList.add("edit-card");
+        editCardButton.classList.add("fa-solid");
+        editCardButton.classList.add("fa-pencil");
         editCardButton.setAttribute("data-modal", "modal-1")
-        editCardButton.textContent = "Editar";
         $(this).append(editCardButton);
     }).on('mouseleave', '.card', function () {
         $('.edit-card').remove();
@@ -347,10 +359,10 @@ $(document).ready(function () {
             }
 
             await atualizarTarefas(task, taskName, taskDescricao, taskLista)
-
+            //Movimenta a tarefa
             if (taskCurrent != taskLista) {
-                const taskElement = $(`#kanban-board .card[id="${task}"]`).detach(); // Remove sem destruir o elemento
-                $(`#kanban-board .kanban-column[id="${taskLista}"]`).append(taskElement);
+                const taskElement = $(`#kanban-board .card[id="${task}"]`).detach(); 
+                $(`#kanban-board .kanban-column[id="${taskLista}"]`).children('.card').last().after(taskElement);
 
             } else $(`#kanban-board .card[id="${task}"]`).text(taskName);
 
@@ -405,7 +417,7 @@ $(document).ready(function () {
             </div>`;
         $('#kanban-board').append(listaHTML);
 
-        
+
     });
 },
 
@@ -438,16 +450,18 @@ $(document).on('click', '.add-list-button', async function () {
         const addBoard = document.createElement("div");
         const addCard = document.createElement("button");
 
-        addCard.classList.add("add-card");
-        addCard.textContent = "+ Adicionar um cartão";
-        addCard.setAttribute("id", response);
-        column.classList.add("kanban-column");
-        column.setAttribute("id", response);
-        header.classList.add("column-header");
-        header.classList.add(priority);
-        addBoard.classList.add("kanban-column-add");
-        addBoard.textContent = "+ Adicionar uma lista";
-        header.textContent = listName;
+        if (!$(`#kanban-board #${response}`).hasClass('add-card')) {
+            addCard.classList.add("add-card");
+            addCard.textContent = "+ Adicionar um cartão";
+            addCard.setAttribute("id", response);
+            column.classList.add("kanban-column");
+            column.setAttribute("id", response);
+            header.classList.add("column-header");
+            header.classList.add(priority);
+            addBoard.classList.add("kanban-column-add");
+            addBoard.textContent = "+ Adicionar uma lista";
+            header.textContent = listName;
+        }
 
         column.appendChild(header);
         column.appendChild(addCard);
