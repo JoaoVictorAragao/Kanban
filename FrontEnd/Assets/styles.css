@@ -67,6 +67,7 @@ body {
     border-radius: 5px;
     padding: 10px;
     margin-bottom: 10px;
+    position: relative;
 }
 
 .card:hover {
@@ -164,17 +165,39 @@ body {
     background-color: transparent;
     border: none;
     position: absolute;
+    right: 0;
+    width: 20px;
+    height: 20px;
 
 }
 
 .edit-card:hover {
     background-color: #89CFF0;
-    border-radius: 50%;
+    border-radius: 70%;
     width: 20px;
     height: 20px;
     display: inline-block;
     transition: background-color 0.3s ease;
 
+}
+
+.edit-list{
+    background-color: transparent;
+    border: none;
+    position: absolute;
+    right: 0;
+    width: 20px;
+    height: 20px;
+    
+}
+
+.edit-list:hover{
+    background-color: #89CFF0;
+    border-radius: 70%;
+    width: 20px;
+    height: 20px;
+    display: inline-block;
+    transition: background-color 0.3s ease;
 }
 
 .card-descricao {

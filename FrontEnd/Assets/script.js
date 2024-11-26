@@ -8,6 +8,16 @@ async function recuperarListas() {
     }
 }
 
+async function recuperarLista(id) {
+    try {
+        const response = await fetch("http://localhost/Kanban/BackEnd/Controller.php?endpoint=list&id=" + id);
+        const list = await response.json();
+        return list;
+    } catch (error) {
+        console.error(error);
+    }
+}
+
 async function recuperarTarefas() {
     try {
         const response = await fetch("http://localhost/Kanban/BackEnd/Controller.php?endpoint=task");
@@ -53,8 +63,6 @@ function atualizarTarefas(id, taskName, taskDesc, taskList) {
 }
 
 
-
-//AJUSTAR PARA FAZER COM QUE ATUALIZE SEMPRE QUE UMA NOVA TAREFA FOR CRIADA
 async function renderTarefas() {
     const board = document.getElementById("kanban-board");
     const lists = await recuperarListas();
@@ -158,6 +166,40 @@ async function criarTarefa(taskName, taskDesc, taskList) {
     } catch (error) {
         console.error('Error:', error);
     }
+}
+
+async function deletarLista(id) {
+    fetch("http://localhost/Kanban/BackEnd/Controller.php?endpoint=list", {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id: id }),
+    }).
+        then(response => response.json())
+        .then(data => {
+            console.log('Success:', data);
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+        });
+}
+
+async function editarLista(id, listaNome, prioridade) {
+    fetch("http://localhost/Kanban/BackEnd/Controller.php?endpoint=list", {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id: id, nome: listaNome, urgencia: prioridade }),
+    }).
+        then(response => response.json())
+        .then(data => {
+            console.log('Success:', data);
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+        });
 }
 
 //window.onload = renderTarefas;
@@ -361,7 +403,7 @@ $(document).ready(function () {
             await atualizarTarefas(task, taskName, taskDescricao, taskLista)
             //Movimenta a tarefa
             if (taskCurrent != taskLista) {
-                const taskElement = $(`#kanban-board .card[id="${task}"]`).detach(); 
+                const taskElement = $(`#kanban-board .card[id="${task}"]`).detach();
                 $(`#kanban-board .kanban-column[id="${taskLista}"]`).children('.card').last().after(taskElement);
 
             } else $(`#kanban-board .card[id="${task}"]`).text(taskName);
@@ -436,6 +478,7 @@ $(document).ready(function () {
 
 );
 
+//Cria a lista
 $(document).on('click', '.add-list-button', async function () {
     try {
         const listName = $('.kanban-column-input').val();
@@ -473,3 +516,83 @@ $(document).on('click', '.add-list-button', async function () {
     }
 });
 
+//Hover para aparecer o botão de editar lista
+$(document).ready(function () {
+    $(document).on('mouseenter', 'div.column-header', function () {
+        const editListButton = document.createElement("button");
+        editListButton.classList.add("edit-list");
+        editListButton.classList.add("fa-solid");
+        editListButton.classList.add("fa-pencil");
+        editListButton.setAttribute("data-modal", "modal-2")
+        $(this).append(editListButton);
+    }).on('mouseleave', '.column-header', function () {
+        $('.edit-list').remove();
+    });
+});
+
+//Modal para editar a lista
+$(document).ready(function () {
+    // Abre o modal ao clicar no botão
+    $(document).on('click', '.edit-list', async function () {
+        try {
+            const listId = $(this).closest('.kanban-column').attr('id');
+            const list = await recuperarLista(listId);
+            console.log(list);
+            console.log(listId);
+            // Verifica se o modal já existe, caso contrário, cria um
+            if ($('#modal-2').length === 0) {
+
+                const modalHTML = `
+                    <dialog id="modal-2">
+                        <form>
+                            <input type="hidden" id="listId" name="taskId" value="${list.id}">
+                            <div class="modal-header">
+                                <h1 class="modal-title">${list.nome}</h1>
+                                <button class="close-modal" type="button">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="input-group">
+                                    <label for="taskName">Nome da Lista</label>
+                                    <input type="text" id="listName" name="listName" value="${list.nome}">
+                                </div>
+                                <label>Prioridade</label>
+                                <form>
+                                    <label><input type="radio" name="prioridade" value="baixa" ${list.urgencia == 'baixa' ? 'checked' : ''}>Baixa</label>
+                                    <label><input type="radio" name="prioridade" value="media" ${list.urgencia == 'media' ? 'checked' : ''}>Média</label>
+                                    <label><input type="radio" name="prioridade" value="alta" ${list.urgencia == 'alta' ? 'checked' : ''}>Alta</label>
+                                </form>
+                                <button id="updateListButton" class="updateButton" type="button">Salvar</button>
+                                <button id="deleteListButton" class="deleteButton" type="button">Excluir</button>
+                            </div>
+                        </form>
+                    </dialog>
+                `;
+                $('body').append(modalHTML);
+
+            }
+            $('.modal-overlay').fadeIn();
+            $('#modal-2').fadeIn();
+        } catch (error) {
+            console.error('Error:', error);
+        }
+
+        // Fecha o modal ao clicar no botão de fechar
+        $(document).on('click', '.close-modal', function () {
+            $('#modal-2').fadeOut();
+            $('.modal-overlay').fadeOut();
+            $('#modal-1').remove();
+        });
+
+        // Fecha o modal ao clicar fora dele
+        $(document).on('click', function (e) {
+            const dialog = $('#modal-2');
+            if (dialog.is(':visible') && !dialog.find(e.target).length && !$(e.target).closest('.edit-card').length) {
+                dialog.fadeOut();
+                $('.modal-overlay').fadeOut();
+                $('#modal-2').remove();
+            }
+        });
+    });
+});

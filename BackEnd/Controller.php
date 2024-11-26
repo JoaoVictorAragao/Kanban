@@ -127,8 +127,9 @@ function getList($id)
 function createList($data)
 {
     global $pdo;
-    $stmt = $pdo->prepare("INSERT INTO lista (nome) VALUES (:nome)");
+    $stmt = $pdo->prepare("INSERT INTO lista (nome, urgencia) VALUES (:nome, :urgencia)");
     $stmt->bindParam(':nome', $data['nome']);
+    $stmt->bindParam(':urgencia', $data['urgencia']);
     $stmt->execute();
     $id = $pdo->lastInsertId();
     echo json_encode(['id' => $id]);
