@@ -33,8 +33,8 @@ switch ($method) {
     case 'PUT':
         if ($endpoint == 'task' && isset($input['id'])) {
             updateTask($input['id'], $input);
-        } elseif ($endpoint == 'list' && isset($_GET['id'])) {
-            updateList($input['id'], $input['id']);
+        } elseif ($endpoint == 'list' && isset($input['id'])) {
+            updateList($input['id'], $input);
         }
         break;
     case 'DELETE':
@@ -138,9 +138,10 @@ function createList($data)
 function updateList($id, $data)
 {
     global $pdo;
-    $stmt = $pdo->prepare("UPDATE lista SET nome = :nome WHERE id = :id");
+    $stmt = $pdo->prepare("UPDATE lista SET nome = :nome, urgencia = :urgencia WHERE id = :id");
     $stmt->bindParam(':id', $id);
     $stmt->bindParam(':nome', $data['nome']);
+    $stmt->bindParam(':urgencia', $data['urgencia']);
     $stmt->execute();
     echo json_encode(["message" => "Lista atualizada com sucesso"]);
 }
@@ -148,8 +149,20 @@ function updateList($id, $data)
 function deleteList($id)
 {
     global $pdo;
-    $stmt = $pdo->prepare("DELETE FROM lista WHERE id = :id");
-    $stmt->bindParam(':id', $id);
-    $stmt->execute();
-    echo json_encode(["message" => "Lista excluída com sucesso"]);
+    $pdo->beginTransaction();
+    try {
+        $stmt = $pdo->prepare("DELETE FROM tarefa WHERE lista = :id");
+        $stmt->bindParam(':id', $id);
+        $stmt->execute();
+
+        $stmt = $pdo->prepare("DELETE FROM lista WHERE id = :id");
+        $stmt->bindParam(':id', $id);
+        $stmt->execute();
+
+        $pdo->commit();
+        echo json_encode(["message" => "Lista e suas tarefas associadas foram excluídas com sucesso"]);
+    } catch (Exception $e) {
+        $pdo->rollBack();
+        echo json_encode(["message" => "Erro ao excluir lista e suas tarefas: " . $e->getMessage()]);
+    }
 }

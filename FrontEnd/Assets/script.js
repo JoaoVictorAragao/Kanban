@@ -202,7 +202,22 @@ async function editarLista(id, listaNome, prioridade) {
         });
 }
 
-//window.onload = renderTarefas;
+async function deletarLista(id) {
+    fetch("http://localhost/Kanban/BackEnd/Controller.php?endpoint=list", {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id: id }),
+    }).then(response => response.json())
+        .then(data => {
+            console.log('Success:', data);
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+        })
+}
+
 document.addEventListener("DOMContentLoaded", recuperarTarefas);
 document.addEventListener("DOMContentLoaded", recuperarListas);
 document.addEventListener("DOMContentLoaded", renderTarefas);
@@ -537,8 +552,7 @@ $(document).ready(function () {
         try {
             const listId = $(this).closest('.kanban-column').attr('id');
             const list = await recuperarLista(listId);
-            console.log(list);
-            console.log(listId);
+
             // Verifica se o modal já existe, caso contrário, cria um
             if ($('#modal-2').length === 0) {
 
@@ -594,5 +608,44 @@ $(document).ready(function () {
                 $('#modal-2').remove();
             }
         });
+    });
+});
+
+//Atualiza a lista com as informações do modal
+$(document).ready(function () {
+    $(document).on('click', '#updateListButton', async function () {
+        try {
+            const listId = $('#listId').val();
+            const listName = $('#listName').val();
+            const priority = $('input[name="prioridade"]:checked').val();
+
+            await editarLista(listId, listName, priority);
+            $(`.kanban-column[id="${listId}"] .column-header`).text(listName);
+            $(`.kanban-column[id="${listId}"] .column-header`).removeClass('baixa media alta').addClass(priority);
+            $('#modal-2').fadeOut();
+            $('.modal-overlay').fadeOut();
+            $('#modal-2').remove();
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    });
+});
+
+//Deletar a tarefa no banco de dados
+$(document).ready(function () {
+    $(document).on('click', '#deleteListButton', async function () {
+        const listId = $('#listId').val();
+        const confirmacao = confirm(`Excluir a lista irá excluir todas as tarefas associadas a ela. Tem certeza que deseja excluir?`);
+        if (confirmacao) {
+            try {
+                await deletarLista(listId);
+                $(`.kanban-column[id="${listId}"]`).remove();
+                $('#modal-2').fadeOut();
+                $('.modal-overlay').fadeOut();
+                $('#modal-2').remove();
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
     });
 });
