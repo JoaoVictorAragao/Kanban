@@ -72,20 +72,21 @@ async function renderTarefas() {
         column.classList.add("kanban-column");
         column.innerHTML = `<div class="column-header ${list.urgencia}">${list.nome}</div>`;
         column.setAttribute("id", list.id);
-        tasks.forEach(task => {
-            if (task.lista === list.id) {
+        tasks
+            .filter(task => task.lista === list.id)
+            .sort((a, b) => a.posicao - b.posicao)
+            .forEach(task => {
                 const card = document.createElement("div");
                 card.classList.add("card");
                 card.setAttribute("id", task.id);
                 card.textContent = task.nome;
                 column.appendChild(card);
-            }
-        });
+            });
         const addCardButton = document.createElement("button");
         addCardButton.classList.add("add-card");
         addCardButton.setAttribute("id", list.id);
         addCardButton.textContent = "+ Adicionar um cartão";
-        //addCardButton.setAttribute("name", "Criado o card ao iniciar");
+
         column.appendChild(addCardButton);
         board.appendChild(column);
     });
@@ -250,7 +251,7 @@ $(document).ready(function () {
             addCardButtonElement.classList.add("add-card");
             addCardButtonElement.textContent = "+ Adicionar um cartão";
             addCardButtonElement.setAttribute("id", listId);
-            //addCardButtonElement.setAttribute("name", "Criado o card");
+
             cardElement.classList.add("card");
             cardElement.textContent = cardTextInput;
             cardElement.setAttribute("id", taskId);
@@ -268,20 +269,17 @@ $(document).ready(function () {
         const dialog = $('.card-input');
         if (dialog.is(':visible') && !dialog.is(e.target) && !$(e.target).closest('.add-card').length) {
             const column = dialog.closest('.kanban-column');
+            const header = column.children('.column-header');
+            const lastCard = column.children('.card').last();
             $('.card-input').remove();
             $('.add-card-button').remove();
-            const lastCard = column.children('.card').last();
-            const addCard = column.children('.add-card').first();
-            if (!addCard.length) {
-                addCard = document.createElement("button");
-                addCard.classList.add("add-card");
-                addCard.textContent = "+ Adicionar um cartão";
-                //addCard.setAttribute("name", "Adicionando quando aperta fora");
-                if (lastCard.length) {
-                    lastCard.after(addCard);
-                } else {
-                    column.prepend(addCard);
-                }
+            const addCard = document.createElement("button");
+            addCard.classList.add("add-card");
+            addCard.textContent = "+ Adicionar um cartão";
+            if (lastCard.length) {
+                lastCard.after(addCard);
+            } else {
+                header.after(addCard);
             }
         }
     })
@@ -340,6 +338,10 @@ $(document).ready(function () {
                                     <select id="taskList" name="taskListDropdown" class="dropdown-lista">
                                         
                                     </select>
+                                </div>
+                                <div class="input-group">
+                                    <label for="taskPos">Posição:</label>
+                                    <input type="number" id="taskPos" name="taskPos" value="${task.posicao}">
                                 </div>
                                 <button id="updateButton" class="updateButton" type="button">Salvar</button>
                                 <button id="deleteButton" class="deleteButton" type="button">Excluir</button>
@@ -649,3 +651,35 @@ $(document).ready(function () {
         }
     });
 });
+
+$(document).ready(function () {
+    $(".card").draggable({
+        revert: "invalid",
+        helper: "clone",
+        start: function (event, ui) {
+            $(this).hide();
+        },
+        stop: function (event, ui) {
+            $(this).show();
+        }
+    });
+
+    $(".kanban-column").droppable({
+        accept: ".card",
+        drop: async function (event, ui) {
+            const draggable = ui.draggable;
+            const cardId = draggable.attr("id");
+            const targetListId = $(this).attr("id");
+
+            if (draggable.closest('.kanban-column').attr('id') !== targetListId) {
+                try {
+                    await atualizarTarefas(cardId, draggable.text(), "", targetListId);
+                    $(this).append(draggable);
+                } catch (error) {
+                    console.error('Erro ao atualizar a tarefa:', error);
+                }
+            }
+        }
+    });
+});
+
