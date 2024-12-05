@@ -1,3 +1,5 @@
+//ADICIONAR O SORTABLE SEMPRE QUE FOR CRIADO UM NOVO ITEM
+
 async function recuperarListas() {
     try {
         const response = await fetch("http://localhost/Kanban/BackEnd/Controller.php?endpoint=list");
@@ -64,39 +66,107 @@ function atualizarTarefas(id, taskName, taskDesc, taskList) {
 
 
 async function renderTarefas() {
-    const board = document.getElementById("kanban-board");
+    const board = $("#kanban-board");
     const lists = await recuperarListas();
     const tasks = await recuperarTarefas();
+    
+    //Listas e tarefas ordenas de forma crescente pela coluna de posicao, atualizando sempre que movimentado
+    lists.sort((a, b) => a.posicao - b.posicao);
+    
     lists.forEach(list => {
-        const column = document.createElement("div");
-        column.classList.add("kanban-column");
-        column.innerHTML = `<div class="column-header ${list.urgencia}">${list.nome}</div>`;
-        column.setAttribute("id", list.id);
-        tasks.forEach(task => {
-            if (task.lista === list.id) {
-                const card = document.createElement("div");
-                card.classList.add("card");
-                card.setAttribute("id", task.id);
-                card.textContent = task.nome;
-                column.appendChild(card);
-            }
-        });
-        const addCardButton = document.createElement("button");
-        addCardButton.classList.add("add-card");
-        addCardButton.setAttribute("id", list.id);
-        addCardButton.textContent = "+ Adicionar um cartão";
-        //addCardButton.setAttribute("name", "Criado o card ao iniciar");
-        column.appendChild(addCardButton);
-        board.appendChild(column);
+        const column = $("<div></div>")
+            .addClass("kanban-column")
+            .attr("id", list.id)
+            .html(`<div class="column-header ${list.urgencia}">${list.nome}</div>`);
+        
+        tasks
+            .filter(task => task.lista === list.id)
+            .sort((a, b) => a.posicao - b.posicao)
+            .forEach(task => {
+                const card = $("<div></div>")
+                    .addClass("card")
+                    .attr("id", task.id)
+                    .text(task.nome);
+                column.append(card);
+            });
+        
+        const addCardButton = $("<button></button>")
+            .addClass("add-card")
+            .attr("id", list.id)
+            .text("+ Adicionar um cartão");
+
+        column.append(addCardButton);
+        board.append(column);
     });
 
-    const addBoard = document.createElement("div");
-    addBoard.classList.add("kanban-column-add");
-    addBoard.textContent = "+ Adicionar uma lista";
-    board.appendChild(addBoard);
+    const addBoard = $("<div></div>")
+        .addClass("kanban-column-add")
+        .text("+ Adicionar uma lista");
+    board.append(addBoard);
+
+    $(".kanban-column").sortable({
+        items: ".card",
+        connectWith: ".kanban-column",
+        containment: "#kanban-board",
+        receive: function (event, ui) {
+            $(this).children(".add-card").insertAfter(ui.item);
+        },
+        update: function (event, ui) {
+            const column = ui.item.closest(".kanban-column");
+
+            //Ajustar o newColumnId para que possa mudar quando movimentar o card para outra coluna
+            const newColumnId = column.attr("id");
+            const tasks = column.find(".card").get().map((card, index) => ({
+                id: card.id,
+                posicao: index,
+                lista: newColumnId
+            }));
+            console.log(tasks);
+            fetch("http://localhost/Kanban/BackEnd/Controller.php?endpoint=taskOrder", {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(tasks.map(task => ({
+                    id: task.id,
+                    posicao: task.posicao,
+                    lista: task.lista
+                }))),
+            }).then(response => response.json())
+              .then(data => {
+                  console.log('Success:', data);
+              })
+              .catch(error => {
+                  console.error('Error:', error);
+              });
+        }
+    }).disableSelection();
+
+    $("#kanban-board").sortable({
+        items: ".kanban-column",
+        axis: "x",
+        update: function (event, ui) {
+            const lists = ui.item.closest("#kanban-board").find(".kanban-column").get().map((column, index) => ({
+                id: column.id,
+                posicao: index,
+            }));
+            fetch("http://localhost/Kanban/BackEnd/Controller.php?endpoint=listOrder", {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(lists),
+            }).then(response => response.json())
+            .then(data => {
+                console.log('Success:', data);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+    }).disableSelection();
 
 }
-
 function deletarTarefa(id) {
     fetch("http://localhost/Kanban/BackEnd/Controller.php?endpoint=task", {
         method: 'DELETE',
@@ -250,7 +320,7 @@ $(document).ready(function () {
             addCardButtonElement.classList.add("add-card");
             addCardButtonElement.textContent = "+ Adicionar um cartão";
             addCardButtonElement.setAttribute("id", listId);
-            //addCardButtonElement.setAttribute("name", "Criado o card");
+
             cardElement.classList.add("card");
             cardElement.textContent = cardTextInput;
             cardElement.setAttribute("id", taskId);
@@ -259,7 +329,7 @@ $(document).ready(function () {
             listElement.append(addCardButtonElement);
             cardInput.remove();
             addButton.remove();
-
+            $('.kanban-column').sortable('refresh');
         });
 
     })
@@ -268,21 +338,15 @@ $(document).ready(function () {
         const dialog = $('.card-input');
         if (dialog.is(':visible') && !dialog.is(e.target) && !$(e.target).closest('.add-card').length) {
             const column = dialog.closest('.kanban-column');
+            const header = column.children('.column-header');
+            const lastCard = column.children('.card').last();
             $('.card-input').remove();
             $('.add-card-button').remove();
-            const lastCard = column.children('.card').last();
-            const addCard = column.children('.add-card').first();
-            if (!addCard.length) {
-                addCard = document.createElement("button");
-                addCard.classList.add("add-card");
-                addCard.textContent = "+ Adicionar um cartão";
-                //addCard.setAttribute("name", "Adicionando quando aperta fora");
-                if (lastCard.length) {
-                    lastCard.after(addCard);
-                } else {
-                    column.prepend(addCard);
-                }
-            }
+            const addCard = document.createElement("button");
+            addCard.classList.add("add-card");
+            addCard.textContent = "+ Adicionar um cartão";
+            addCard.setAttribute("id", "QUI");
+    
         }
     })
 
@@ -340,6 +404,10 @@ $(document).ready(function () {
                                     <select id="taskList" name="taskListDropdown" class="dropdown-lista">
                                         
                                     </select>
+                                </div>
+                                <div class="input-group">
+                                    <label for="taskPos">Posição:</label>
+                                    <input type="number" id="taskPos" name="taskPos" value="${task.posicao}">
                                 </div>
                                 <button id="updateButton" class="updateButton" type="button">Salvar</button>
                                 <button id="deleteButton" class="deleteButton" type="button">Excluir</button>
@@ -473,7 +541,7 @@ $(document).ready(function () {
                 <button class="add-list-button">Adicionar</button>
             </div>`;
         $('#kanban-board').append(listaHTML);
-
+        $('.kanban-column').sortable('refresh');
 
     });
 },
@@ -513,6 +581,7 @@ $(document).on('click', '.add-list-button', async function () {
             addCard.textContent = "+ Adicionar um cartão";
             addCard.setAttribute("id", response);
             column.classList.add("kanban-column");
+
             column.setAttribute("id", response);
             header.classList.add("column-header");
             header.classList.add(priority);
@@ -520,12 +589,13 @@ $(document).on('click', '.add-list-button', async function () {
             addBoard.textContent = "+ Adicionar uma lista";
             header.textContent = listName;
         }
-
+        
         column.appendChild(header);
         column.appendChild(addCard);
         board.appendChild(column);
         board.appendChild(addBoard);
-
+        $('.kanban-column').sortable('refresh');
+        
     } catch (error) {
         console.error('Error:', error);
     }

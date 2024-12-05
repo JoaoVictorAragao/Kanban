@@ -35,6 +35,10 @@ switch ($method) {
             updateTask($input['id'], $input);
         } elseif ($endpoint == 'list' && isset($input['id'])) {
             updateList($input['id'], $input);
+        } elseif ($endpoint == 'listOrder'){
+            updateListOrder($input);
+        } elseif ($endpoint == 'taskOrder'){
+            updateTaskOrder($input);
         }
         break;
     case 'DELETE':
@@ -164,5 +168,44 @@ function deleteList($id)
     } catch (Exception $e) {
         $pdo->rollBack();
         echo json_encode(["message" => "Erro ao excluir lista e suas tarefas: " . $e->getMessage()]);
+    }
+}
+
+function updateListOrder($lists)
+{
+    global $pdo;
+    $pdo->beginTransaction();
+    try {
+        foreach ($lists as $list) {
+            $stmt = $pdo->prepare("UPDATE lista SET posicao = :posicao WHERE id = :id");
+            $stmt->bindParam(':posicao', $list['posicao']);
+            $stmt->bindParam(':id', $list['id']);
+            $stmt->execute();
+        }
+        $pdo->commit();
+        echo json_encode(["message" => "Ordem da lista atualizada com sucesso"]);
+    } catch (Exception $e) {
+        $pdo->rollBack();
+        echo json_encode(["message" => "Erro ao atualizar a ordem da lista: " . $e->getMessage()]);
+    }
+}
+
+function updateTaskOrder($tasks)
+{
+    global $pdo;
+    $pdo->beginTransaction();
+    try {
+        foreach ($tasks as $task) {
+            $stmt = $pdo->prepare("UPDATE tarefa SET posicao = :posicao WHERE id = :id AND lista = :lista");
+            $stmt->bindParam(':posicao', $task['posicao']);
+            $stmt->bindParam(':id', $task['id']);
+            $stmt->bindParam(':lista', $task['lista']);
+            $stmt->execute();
+        }
+        $pdo->commit();
+        echo json_encode(["message" => "Ordem das tarefas atualizada com sucesso"]);
+    } catch (Exception $e) {
+        $pdo->rollBack();
+        echo json_encode(["message" => "Erro ao atualizar a ordem das tarefas: " . $e->getMessage()]);
     }
 }
