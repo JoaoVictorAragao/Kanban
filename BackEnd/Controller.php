@@ -131,9 +131,10 @@ function getList($id)
 function createList($data)
 {
     global $pdo;
-    $stmt = $pdo->prepare("INSERT INTO lista (nome, urgencia) VALUES (:nome, :urgencia)");
+    $stmt = $pdo->prepare("INSERT INTO lista (nome, urgencia, posicao) VALUES (:nome, :urgencia, :posicao)");
     $stmt->bindParam(':nome', $data['nome']);
     $stmt->bindParam(':urgencia', $data['urgencia']);
+    $stmt->bindParam(':posicao', $data['posicao']);
     $stmt->execute();
     $id = $pdo->lastInsertId();
     echo json_encode(['id' => $id]);
@@ -196,7 +197,7 @@ function updateTaskOrder($tasks)
     $pdo->beginTransaction();
     try {
         foreach ($tasks as $task) {
-            $stmt = $pdo->prepare("UPDATE tarefa SET posicao = :posicao WHERE id = :id AND lista = :lista");
+            $stmt = $pdo->prepare("UPDATE tarefa SET posicao = :posicao, lista = :lista WHERE id = :id");
             $stmt->bindParam(':posicao', $task['posicao']);
             $stmt->bindParam(':id', $task['id']);
             $stmt->bindParam(':lista', $task['lista']);

@@ -113,8 +113,6 @@ async function renderTarefas() {
         },
         update: function (event, ui) {
             const column = ui.item.closest(".kanban-column");
-
-            //Ajustar o newColumnId para que possa mudar quando movimentar o card para outra coluna
             const newColumnId = column.attr("id");
             const tasks = column.find(".card").get().map((card, index) => ({
                 id: card.id,
@@ -184,7 +182,7 @@ function deletarTarefa(id) {
         });
 }
 
-async function criarLista(listaNome, prioridade) {
+async function criarLista(listaNome, prioridade, posicao) {
     if (!listaNome || !prioridade) {
         console.error('Error: listaNome or prioridade is null or undefined.');
         return;
@@ -196,7 +194,7 @@ async function criarLista(listaNome, prioridade) {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ nome: listaNome, urgencia: prioridade }),
+            body: JSON.stringify({ nome: listaNome, urgencia: prioridade, posicao: posicao }),
         });
 
         if (!response.ok) {
@@ -541,7 +539,7 @@ $(document).ready(function () {
                 <button class="add-list-button">Adicionar</button>
             </div>`;
         $('#kanban-board').append(listaHTML);
-        $('.kanban-column').sortable('refresh');
+        //$('.kanban-column').sortable('refresh');
 
     });
 },
@@ -566,9 +564,10 @@ $(document).on('click', '.add-list-button', async function () {
     try {
         const listName = $('.kanban-column-input').val();
         const priority = $('input[name="prioridade"]:checked').val();
-        console.log(priority);
+        const position = $('.kanban-column').length + 1;
+
         $('#adiciona-coluna').remove();
-        const response = await criarLista(listName, priority);
+        const response = await criarLista(listName, priority, position);
 
         const board = document.getElementById("kanban-board");
         const column = document.createElement("div");
@@ -594,11 +593,13 @@ $(document).on('click', '.add-list-button', async function () {
         column.appendChild(addCard);
         board.appendChild(column);
         board.appendChild(addBoard);
-        $('.kanban-column').sortable('refresh');
+        
         
     } catch (error) {
         console.error('Error:', error);
     }
+    $('.kanban-column').sortable('refresh');
+
 });
 
 //Hover para aparecer o botão de editar lista
