@@ -1,3 +1,5 @@
+//ADICIONAR O SORTABLE SEMPRE QUE FOR CRIADO UM NOVO ITEM
+
 async function recuperarListas() {
     try {
         const response = await fetch("http://localhost/Kanban/BackEnd/Controller.php?endpoint=list");
@@ -64,40 +66,105 @@ function atualizarTarefas(id, taskName, taskDesc, taskList) {
 
 
 async function renderTarefas() {
-    const board = document.getElementById("kanban-board");
+    const board = $("#kanban-board");
     const lists = await recuperarListas();
     const tasks = await recuperarTarefas();
+    
+    //Listas e tarefas ordenas de forma crescente pela coluna de posicao, atualizando sempre que movimentado
+    lists.sort((a, b) => a.posicao - b.posicao);
+    
     lists.forEach(list => {
-        const column = document.createElement("div");
-        column.classList.add("kanban-column");
-        column.innerHTML = `<div class="column-header ${list.urgencia}">${list.nome}</div>`;
-        column.setAttribute("id", list.id);
+        const column = $("<div></div>")
+            .addClass("kanban-column")
+            .attr("id", list.id)
+            .html(`<div class="column-header ${list.urgencia}">${list.nome}</div>`);
+        
         tasks
             .filter(task => task.lista === list.id)
             .sort((a, b) => a.posicao - b.posicao)
             .forEach(task => {
-                const card = document.createElement("div");
-                card.classList.add("card");
-                card.setAttribute("id", task.id);
-                card.textContent = task.nome;
-                column.appendChild(card);
+                const card = $("<div></div>")
+                    .addClass("card")
+                    .attr("id", task.id)
+                    .text(task.nome);
+                column.append(card);
             });
-        const addCardButton = document.createElement("button");
-        addCardButton.classList.add("add-card");
-        addCardButton.setAttribute("id", list.id);
-        addCardButton.textContent = "+ Adicionar um cartão";
+        
+        const addCardButton = $("<button></button>")
+            .addClass("add-card")
+            .attr("id", list.id)
+            .text("+ Adicionar um cartão");
 
-        column.appendChild(addCardButton);
-        board.appendChild(column);
+        column.append(addCardButton);
+        board.append(column);
     });
 
-    const addBoard = document.createElement("div");
-    addBoard.classList.add("kanban-column-add");
-    addBoard.textContent = "+ Adicionar uma lista";
-    board.appendChild(addBoard);
+    const addBoard = $("<div></div>")
+        .addClass("kanban-column-add")
+        .text("+ Adicionar uma lista");
+    board.append(addBoard);
+
+    $(".kanban-column").sortable({
+        items: ".card",
+        connectWith: ".kanban-column",
+        containment: "#kanban-board",
+        receive: function (event, ui) {
+            $(this).children(".add-card").insertAfter(ui.item);
+        },
+        update: function (event, ui) {
+            const column = ui.item.closest(".kanban-column");
+            const newColumnId = column.attr("id");
+            const tasks = column.find(".card").get().map((card, index) => ({
+                id: card.id,
+                posicao: index,
+                lista: newColumnId
+            }));
+            console.log(tasks);
+            fetch("http://localhost/Kanban/BackEnd/Controller.php?endpoint=taskOrder", {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(tasks.map(task => ({
+                    id: task.id,
+                    posicao: task.posicao,
+                    lista: task.lista
+                }))),
+            }).then(response => response.json())
+              .then(data => {
+                  console.log('Success:', data);
+              })
+              .catch(error => {
+                  console.error('Error:', error);
+              });
+        }
+    }).disableSelection();
+
+    $("#kanban-board").sortable({
+        items: ".kanban-column",
+        axis: "x",
+        update: function (event, ui) {
+            const lists = ui.item.closest("#kanban-board").find(".kanban-column").get().map((column, index) => ({
+                id: column.id,
+                posicao: index,
+            }));
+            fetch("http://localhost/Kanban/BackEnd/Controller.php?endpoint=listOrder", {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(lists),
+            }).then(response => response.json())
+            .then(data => {
+                console.log('Success:', data);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+    }).disableSelection();
 
 }
-
 function deletarTarefa(id) {
     fetch("http://localhost/Kanban/BackEnd/Controller.php?endpoint=task", {
         method: 'DELETE',
@@ -115,7 +182,7 @@ function deletarTarefa(id) {
         });
 }
 
-async function criarLista(listaNome, prioridade) {
+async function criarLista(listaNome, prioridade, posicao) {
     if (!listaNome || !prioridade) {
         console.error('Error: listaNome or prioridade is null or undefined.');
         return;
@@ -127,7 +194,7 @@ async function criarLista(listaNome, prioridade) {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ nome: listaNome, urgencia: prioridade }),
+            body: JSON.stringify({ nome: listaNome, urgencia: prioridade, posicao: posicao }),
         });
 
         if (!response.ok) {
@@ -260,7 +327,7 @@ $(document).ready(function () {
             listElement.append(addCardButtonElement);
             cardInput.remove();
             addButton.remove();
-
+            $('.kanban-column').sortable('refresh');
         });
 
     })
@@ -276,11 +343,8 @@ $(document).ready(function () {
             const addCard = document.createElement("button");
             addCard.classList.add("add-card");
             addCard.textContent = "+ Adicionar um cartão";
-            if (lastCard.length) {
-                lastCard.after(addCard);
-            } else {
-                header.after(addCard);
-            }
+            addCard.setAttribute("id", "QUI");
+    
         }
     })
 
@@ -475,7 +539,7 @@ $(document).ready(function () {
                 <button class="add-list-button">Adicionar</button>
             </div>`;
         $('#kanban-board').append(listaHTML);
-
+        //$('.kanban-column').sortable('refresh');
 
     });
 },
@@ -500,9 +564,10 @@ $(document).on('click', '.add-list-button', async function () {
     try {
         const listName = $('.kanban-column-input').val();
         const priority = $('input[name="prioridade"]:checked').val();
-        console.log(priority);
+        const position = $('.kanban-column').length + 1;
+
         $('#adiciona-coluna').remove();
-        const response = await criarLista(listName, priority);
+        const response = await criarLista(listName, priority, position);
 
         const board = document.getElementById("kanban-board");
         const column = document.createElement("div");
@@ -515,6 +580,7 @@ $(document).on('click', '.add-list-button', async function () {
             addCard.textContent = "+ Adicionar um cartão";
             addCard.setAttribute("id", response);
             column.classList.add("kanban-column");
+
             column.setAttribute("id", response);
             header.classList.add("column-header");
             header.classList.add(priority);
@@ -522,15 +588,18 @@ $(document).on('click', '.add-list-button', async function () {
             addBoard.textContent = "+ Adicionar uma lista";
             header.textContent = listName;
         }
-
+        
         column.appendChild(header);
         column.appendChild(addCard);
         board.appendChild(column);
         board.appendChild(addBoard);
-
+        
+        
     } catch (error) {
         console.error('Error:', error);
     }
+    $('.kanban-column').sortable('refresh');
+
 });
 
 //Hover para aparecer o botão de editar lista
@@ -651,35 +720,3 @@ $(document).ready(function () {
         }
     });
 });
-
-$(document).ready(function () {
-    $(".card").draggable({
-        revert: "invalid",
-        helper: "clone",
-        start: function (event, ui) {
-            $(this).hide();
-        },
-        stop: function (event, ui) {
-            $(this).show();
-        }
-    });
-
-    $(".kanban-column").droppable({
-        accept: ".card",
-        drop: async function (event, ui) {
-            const draggable = ui.draggable;
-            const cardId = draggable.attr("id");
-            const targetListId = $(this).attr("id");
-
-            if (draggable.closest('.kanban-column').attr('id') !== targetListId) {
-                try {
-                    await atualizarTarefas(cardId, draggable.text(), "", targetListId);
-                    $(this).append(draggable);
-                } catch (error) {
-                    console.error('Erro ao atualizar a tarefa:', error);
-                }
-            }
-        }
-    });
-});
-
