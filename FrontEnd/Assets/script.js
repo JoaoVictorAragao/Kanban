@@ -1,4 +1,3 @@
-//ADICIONAR O SORTABLE SEMPRE QUE FOR CRIADO UM NOVO ITEM
 
 async function recuperarListas() {
     try {
@@ -109,7 +108,7 @@ async function renderTarefas() {
         connectWith: ".kanban-column",
         containment: "#kanban-board",
         receive: function (event, ui) {
-            $(this).children(".add-card").insertAfter(ui.item);
+            $(this).children(".card").last().after($(this).children(".add-card"));
         },
         update: function (event, ui) {
             const column = ui.item.closest(".kanban-column");
@@ -344,7 +343,15 @@ $(document).ready(function () {
             addCard.classList.add("add-card");
             addCard.textContent = "+ Adicionar um cartão";
             addCard.setAttribute("id", "QUI");
-    
+            console.log(lastCard.length);
+
+            if (!$(e.target).is('.card-input, .add-card-button')) {
+                if (lastCard.length) {
+                    lastCard.after(addCard);
+                } else {
+                    header.after(addCard);
+                }
+            }
         }
     })
 
@@ -402,10 +409,6 @@ $(document).ready(function () {
                                     <select id="taskList" name="taskListDropdown" class="dropdown-lista">
                                         
                                     </select>
-                                </div>
-                                <div class="input-group">
-                                    <label for="taskPos">Posição:</label>
-                                    <input type="number" id="taskPos" name="taskPos" value="${task.posicao}">
                                 </div>
                                 <button id="updateButton" class="updateButton" type="button">Salvar</button>
                                 <button id="deleteButton" class="deleteButton" type="button">Excluir</button>
