@@ -68,16 +68,16 @@ async function renderTarefas() {
     const board = $("#kanban-board");
     const lists = await recuperarListas();
     const tasks = await recuperarTarefas();
-    
+
     //Listas e tarefas ordenas de forma crescente pela coluna de posicao, atualizando sempre que movimentado
     lists.sort((a, b) => a.posicao - b.posicao);
-    
+
     lists.forEach(list => {
         const column = $("<div></div>")
             .addClass("kanban-column")
             .attr("id", list.id)
             .html(`<div class="column-header ${list.urgencia}">${list.nome}</div>`);
-        
+
         tasks
             .filter(task => task.lista === list.id)
             .sort((a, b) => a.posicao - b.posicao)
@@ -88,7 +88,7 @@ async function renderTarefas() {
                     .text(task.nome);
                 column.append(card);
             });
-        
+
         const addCardButton = $("<button></button>")
             .addClass("add-card")
             .attr("id", list.id)
@@ -130,12 +130,12 @@ async function renderTarefas() {
                     lista: task.lista
                 }))),
             }).then(response => response.json())
-              .then(data => {
-                  console.log('Success:', data);
-              })
-              .catch(error => {
-                  console.error('Error:', error);
-              });
+                .then(data => {
+                    console.log('Success:', data);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
         }
     }).disableSelection();
 
@@ -154,12 +154,12 @@ async function renderTarefas() {
                 },
                 body: JSON.stringify(lists),
             }).then(response => response.json())
-            .then(data => {
-                console.log('Success:', data);
-            })
-            .catch(error => {
-                console.error('Error:', error);
-            });
+                .then(data => {
+                    console.log('Success:', data);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
         }
     }).disableSelection();
 
@@ -342,8 +342,6 @@ $(document).ready(function () {
             const addCard = document.createElement("button");
             addCard.classList.add("add-card");
             addCard.textContent = "+ Adicionar um cartão";
-            addCard.setAttribute("id", "QUI");
-            console.log(lastCard.length);
 
             if (!$(e.target).is('.card-input, .add-card-button')) {
                 if (lastCard.length) {
@@ -591,13 +589,13 @@ $(document).on('click', '.add-list-button', async function () {
             addBoard.textContent = "+ Adicionar uma lista";
             header.textContent = listName;
         }
-        
+
         column.appendChild(header);
         column.appendChild(addCard);
         board.appendChild(column);
         board.appendChild(addBoard);
-        
-        
+
+
     } catch (error) {
         console.error('Error:', error);
     }

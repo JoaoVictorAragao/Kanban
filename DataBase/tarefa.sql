@@ -1,3 +1,6 @@
+-- Este script define a tabela 'tarefa' no banco de dados 'Kanban', 
+-- com colunas para armazenar informações sobre tarefas no quadro Kanban.
+-- Inclui um identificador único, nome, descrição, e referência à lista a que pertence.
 use Kanban;
 
 create Table tarefa(
