@@ -1,3 +1,2 @@
-Desenvolvimento iniciado dia 08/11/2024
-Desenvolvimento finalizado dia 06/12/2024
-15 dias de desenvolvimento, em média 2 horas por dia
+#Sistema Kanban
+Sistema inspirado no trello, utilizada API REST no backend PHP e frontend jQuery. Funções de CRUD realizadas de forma dinâmica, a ordenação dos itens e das listas são feitas com arraste e solte onde a ordem é salva no banco de dados MySQL.
